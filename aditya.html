@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Message: Level Up!</title>
+    <style>
+        /* General Styles */
+        body {
+            background-color: #0d1117;
+            color: #c9d1d9;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            overflow-x: hidden;
+        }
+
+        /* --- THE VAULT STYLES --- */
+        #vault-screen {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 1s ease-out;
+            background: radial-gradient(circle, rgba(13,17,23,1) 0%, rgba(4,8,14,1) 100%);
+        }
+        
+        .vault-box {
+            border: 2px solid #58a6ff;
+            padding: 40px;
+            border-radius: 10px;
+            background: rgba(13, 17, 23, 0.9);
+            box-shadow: 0 0 25px rgba(88, 166, 255, 0.3);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        h2 { color: #58a6ff; text-transform: uppercase; letter-spacing: 1px;}
+
+        input[type="password"] {
+            padding: 12px;
+            font-size: 16px;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            color: #58a6ff;
+            margin-bottom: 20px;
+            text-align: center;
+            outline: none;
+            width: 80%;
+            border-radius: 5px;
+        }
+
+        input[type="password"]:focus {
+            border-color: #58a6ff;
+            box-shadow: 0 0 10px rgba(88, 166, 255, 0.2);
+        }
+
+        button {
+            padding: 12px 25px;
+            font-size: 16px;
+            background: #58a6ff;
+            color: #0d1117;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            background: #79c0ff;
+            box-shadow: 0 0 15px #58a6ff;
+        }
+
+        #error-msg {
+            color: #ff7b72;
+            margin-top: 15px;
+            display: none;
+            font-weight: bold;
+        }
+
+        /* --- MAIN CONTENT STYLES (Hidden initially) --- */
+        #main-content {
+            display: none;
+            padding: 20px;
+            opacity: 0;
+            animation: fadeIn 2s forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        /* The Level Up Header */
+        .level-up-banner {
+            border: 2px solid #3fb950;
+            padding: 30px;
+            margin: 40px auto;
+            max-width: 650px;
+            box-shadow: 0 0 40px rgba(63, 185, 80, 0.3);
+            border-radius: 8px;
+            background: linear-gradient(180deg, rgba(63, 185, 80, 0.1) 0%, transparent 100%);
+        }
+
+        .level-up-banner h1 { 
+            color: #3fb950; 
+            text-transform: uppercase; 
+            letter-spacing: 4px;
+            font-size: 2.5em;
+            margin-top: 0;
+        }
+        
+        /* Stats Section */
+        .stats-container {
+            max-width: 650px;
+            margin: 0 auto 50px auto;
+            text-align: left;
+            border: 1px solid #30363d;
+            padding: 30px;
+            border-radius: 8px;
+            background: #161b22;
+        }
+
+        .stat-row {
+            margin-bottom: 25px;
+        }
+
+        .stat-name { font-weight: bold; margin-bottom: 5px; color: #58a6ff; font-size: 1.1em;}
+        .stat-desc { font-size: 0.85em; color: #8b949e; margin-bottom: 8px; font-style: italic;}
+        
+        .stat-bar-bg {
+            width: 100%;
+            background-color: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 5px;
+            height: 22px;
+            overflow: hidden;
+        }
+
+        .stat-bar-fill {
+            height: 100%;
+            background-color: #58a6ff;
+            width: 0%; /* Animates to full via JS */
+            transition: width 2s ease-in-out;
+            box-shadow: 0 0 10px #58a6ff;
+        }
+
+        .stat-max { background-color: #d2a8ff; box-shadow: 0 0 10px #d2a8ff;}
+
+        /* Scrapbook Section */
+        .scrapbook-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding-bottom: 50px;
+        }
+
+        .memory-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 40px;
+            opacity: 0; 
+            transform: translateY(40px);
+            transition: all 0.8s ease-out;
+        }
+
+        .memory-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+            box-shadow: 0 0 20px rgba(88, 166, 255, 0.1);
+        }
+
+        .memory-card img {
+            width: 100%;
+            max-width: 600px;
+            border-radius: 8px;
+            border: 2px solid #58a6ff;
+        }
+
+        .caption {
+            margin-top: 20px;
+            font-size: 18px;
+            font-family: sans-serif;
+            color: #c9d1d9;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- THE VAULT -->
+    <div id="vault-screen">
+        <div class="vault-box">
+            <h2>System Authentication</h2>
+            <p>Enter password to unlock player profile:</p>
+            <input type="password" id="password-input" placeholder="Enter Secret Code">
+            <br>
+            <button onclick="checkPassword()">Unlock</button>
+            <p id="error-msg">[System Error] Access Denied.</p>
+        </div>
+    </div>
+
+    <!-- THE REVEAL (Stats + Scrapbook) -->
+    <div id="main-content">
+        
+        <div class="level-up-banner">
+            <h1>Level Up!</h1>
+            <h2 style="color: #c9d1d9;">Player: Aaisha</h2>
+            <p style="font-size: 1.2em; color: #8b949e;">[System Notification] You have successfully reached Level [INSERT_AGE].</p>
+        </div>
+
+        <div class="stats-container">
+            <h3 style="text-align: center; border-bottom: 1px solid #30363d; padding-bottom: 15px; margin-top: 0;">Player Attributes Awakened</h3>
+            
+            <div class="stat-row">
+                <div class="stat-name">Aura of Charm: Monarch Tier</div>
+                <div class="stat-desc">Immobilizes opponents instantly with a single smile.</div>
+                <div class="stat-bar-bg"><div class="stat-bar-fill stat-max" id="stat1"></div></div>
+            </div>
+            
+            <div class="stat-row">
+                <div class="stat-name">Patience (Handling Aditya): S-Rank</div>
+                <div class="stat-desc">Possesses 100% resistance to annoying behavior and bad jokes.</div>
+                <div class="stat-bar-bg"><div class="stat-bar-fill" id="stat2"></div></div>
+            </div>
+
+            <div class="stat-row">
+                <div class="stat-name">Healing Magic: Fully Awakened</div>
+                <div class="stat-desc">Can completely restore HP and cure a bad mood with just one hug.</div>
+                <div class="stat-bar-bg"><div class="stat-bar-fill stat-max" id="stat3"></div></div>
+            </div>
+
+            <div class="stat-row">
+                <div class="stat-name">Wits & Sarcasm: Level 999</div>
+                <div class="stat-desc">Unmatched in debates. Has a 100% win rate in all our arguments.</div>
+                <div class="stat-bar-bg"><div class="stat-bar-fill" id="stat4"></div></div>
+            </div>
+        </div>
+
+        <h2 style="color: #a5d6ff; margin-top: 60px; font-size: 1.8em;">[ Memory Inventory Unlocked ]</h2>
+        <p style="margin-bottom: 40px; color: #8b949e;">Scroll down to view quest history...</p>
+
+        <div class="scrapbook-container">
+            <!-- Memory 1 -->
+            <div class="memory-card">
+                <img src="INSERT_PHOTO_LINK_1_HERE" alt="Memory 1">
+                <p class="caption">The day we [insert memory]. You looked absolutely stunning here.</p>
+            </div>
+
+            <!-- Memory 2 -->
+            <div class="memory-card">
+                <img src="INSERT_PHOTO_LINK_2_HERE" alt="Memory 2">
+                <p class="caption">Our quest to [Place]. One of the best days of my life.</p>
+            </div>
+
+            <!-- Memory 3 -->
+            <div class="memory-card">
+                <img src="INSERT_PHOTO_LINK_3_HERE" alt="Memory 3">
+                <p class="caption">Happy Birthday, Aaisha! I can't wait to clear more levels of life with you.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- 1. VAULT LOGIC ---
+        function checkPassword() {
+            const input = document.getElementById("password-input").value;
+            const correctPassword = "aaishaadi"; // Password is set here
+
+            if(input.toLowerCase() === correctPassword) {
+                // Hide vault, show main content
+                document.getElementById("vault-screen").style.opacity = "0";
+                
+                setTimeout(() => {
+                    document.getElementById("vault-screen").style.display = "none";
+                    document.getElementById("main-content").style.display = "block";
+                    
+                    // Trigger stat bar animations after a slight delay
+                    setTimeout(() => {
+                        document.getElementById("stat1").style.width = "100%";
+                        document.getElementById("stat2").style.width = "100%";
+                        document.getElementById("stat3").style.width = "100%";
+                        document.getElementById("stat4").style.width = "99%";
+                    }, 800);
+                }, 1000);
+            } else {
+                document.getElementById("error-msg").style.display = "block";
+            }
+        }
+
+        // Allow pressing Enter to submit password
+        document.getElementById("password-input").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                checkPassword();
+            }
+        });
+
+        // --- 2. SCRAPBOOK SCROLL ANIMATION ---
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.15 });
+
+        const cards = document.querySelectorAll('.memory-card');
+        cards.forEach(card => observer.observe(card));
+    </script>
+</body>
+</html>
